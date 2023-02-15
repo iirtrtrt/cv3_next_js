@@ -1,44 +1,22 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useRouter } from "next/router";
 import BaseLayout from "../../components/base_layout";
-import axios from "axios";
 import Image from "next/image";
 import Link from "next/link";
 import { useCookies } from "react-cookie";
+import validateEmail from "../../functions/validate_email";
+import loginApi from "../api/login_api";
 
 export default function Login() {
   const [cookies, setCookie] = useCookies(["access-token"]);
   const router = useRouter();
 
-  const emailRegEx =
-    /^[A-Za-z0-9]([-_.]?[A-Za-z0-9])*@[A-Za-z0-9]([-_.]?[A-Za-z0-9])*\.[A-Za-z]{2,3}$/i;
-  function validateEmail(email) {
-    return emailRegEx.test(email); //형식에 맞을 경우, true 리턴
-  }
-  async function loginApi(json) {
-    await axios
-      .post(
-        "http://localhost:5000/api/auth/login/",
-        JSON.stringify({
-          email: json.email,
-          password: json.password,
-        }),
-        {
-          headers: {
-            "Content-Type": `application/json`,
-            "Access-Control-Allow-Headers": "*",
-            "Access-Control-Allow-Origin": "*",
-          },
-        }
-      )
-      .then((res) => {
-        setCookie("access-token", res.data.accessToken);
-        router.push("/");
-      })
-      .catch((err) => console.log(err));
-  }
-
   const [userData, setUserData] = useState({
+    email: "",
+    password: "",
+  });
+
+  const [errors, setErrors] = useState({
     email: "",
     password: "",
   });
@@ -50,12 +28,7 @@ export default function Login() {
     });
   }
 
-  const [errors, setErrors] = useState({
-    email: "",
-    password: "",
-  });
-
-  function validate() {
+  function checkLoginError() {
     const errors = {
       email: "",
       password: "",
@@ -64,7 +37,7 @@ export default function Login() {
     if (!userData.email) {
       errors.email = "이메일 에러";
     } else if (!validateEmail(userData.email)) {
-      errors.email = "이메일 에러";
+      errors.email = "이메일 형식 에러";
     }
     if (!userData.password) {
       errors.password = "비밀번호 에러";
@@ -75,13 +48,16 @@ export default function Login() {
 
   function handleSubmit(e) {
     e.preventDefault();
-    const errors = validate();
-    setErrors(errors);
-    if (Object.values(errors).some((v) => v)) {
-      return;
-    }
 
-    loginApi(userData);
+    const checkedError = checkLoginError();
+    setErrors(checkedError);
+
+    if (!errors.email && !errors.password) {
+      loginApi(userData).then((res) => {
+        setCookie("access-token", res.accessToken);
+        router.push("/");
+      });
+    }
   }
 
   return (

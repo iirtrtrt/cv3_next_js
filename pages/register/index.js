@@ -1,34 +1,14 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import BaseLayout from "../../components/base_layout";
-import axios from "axios";
+import validateEmail from "../../functions/validate_email";
+import loginApi from "../api/login_api";
+import { useRouter } from "next/router";
+import { useCookies } from "react-cookie";
+import registerApi from "../api/register_api";
 
 export default function Register() {
-  const emailRegEx =
-    /^[A-Za-z0-9]([-_.]?[A-Za-z0-9])*@[A-Za-z0-9]([-_.]?[A-Za-z0-9])*\.[A-Za-z]{2,3}$/i;
-  function validateEmail(email) {
-    return emailRegEx.test(email); //형식에 맞을 경우, true 리턴
-  }
-  async function registerApi(json) {
-    await axios
-      .post(
-        "http://localhost:5000/api/auth/register/",
-        JSON.stringify({
-          email: json.email,
-          password: json.password1,
-        }),
-        {
-          headers: {
-            "Content-Type": `application/json`,
-            "Access-Control-Allow-Headers": "*",
-            "Access-Control-Allow-Origin": "*",
-          },
-        }
-      )
-      .then((res) => {
-        console.log(res.data);
-      })
-      .catch((err) => console.log(err));
-  }
+  const [cookies, setCookie] = useCookies(["access-token"]);
+  const router = useRouter();
 
   const [userData, setUserData] = useState({
     email: "",
@@ -50,7 +30,7 @@ export default function Register() {
     password3: "",
   });
 
-  function validate() {
+  function checkRegisterError() {
     const errors = {
       email: "",
       password1: "",
@@ -61,7 +41,7 @@ export default function Register() {
     if (!userData.email) {
       errors.email = "이메일 에러";
     } else if (!validateEmail(userData.email)) {
-      errors.email = "이메일 에러";
+      errors.email = "이메일 형식 에러";
     }
     if (!userData.password1) {
       errors.password1 = "비밀번호 에러";
@@ -78,13 +58,23 @@ export default function Register() {
 
   function handleSubmit(e) {
     e.preventDefault();
-    const errors = validate();
-    setErrors(errors);
-    if (Object.values(errors).some((v) => v)) {
-      return;
-    }
 
-    registerApi(userData);
+    const errors = checkRegisterError();
+    setErrors(errors);
+    
+    if (
+      !errors.email &&
+      !errors.password1 &&
+      !errors.password2 &&
+      !errors.password3
+    ) {
+      registerApi(userData).then((res) => {
+        loginApi(res).then((res) => {
+          setCookie("access-token", res.accessToken);
+          router.push("/");
+        });
+      });
+    }
   }
 
   return (

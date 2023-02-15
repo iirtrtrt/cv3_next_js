@@ -1,79 +1,27 @@
 import { useEffect, useState } from "react";
-import { useRouter } from "next/router";
 import BaseLayout from "../components/base_layout";
-import axios from "axios";
 import Image from "next/image";
 import Link from "next/link";
 import { useCookies } from "react-cookie";
+import typeApi from "./api/type_api";
+import rankingApi from "./api/ranking_api";
+import getTypeByCid from "../functions/get_type_by_cid";
 
 export default function Home() {
-  const router = useRouter();
-
   const [cookies, setCookie] = useCookies(["access-token"]);
 
-  const [data, setData] = useState();
+  const [ranking, setRanking] = useState();
   const [types, setTypes] = useState();
 
-  async function rankingApi() {
-    await axios
-      .get("http://localhost:5000/api/ranking", {
-        withCredentials: true,
-      })
-      .then((res) => {
-        setData(res.data);
-      })
-      .catch((err) => console.log(err));
-  }
-
-  async function logoutApi() {
-    await axios
-      .post("http://localhost:5000/api/auth/logout", {
-        withCredentials: true,
-      })
-      .catch((err) => console.log(err));
-  }
-
-  async function typesApi() {
-    const res = await fetch("https://datalab.labangba.com/home/gnb", {
-      headers: {
-        accept: "*/*",
-        "accept-language": "en-AU,en;q=0.9,ko-KR;q=0.8,ko;q=0.7,en-US;q=0.6",
-        "content-type": "application/json",
-        "sec-ch-ua":
-          '"Chromium";v="110", "Not A(Brand";v="24", "Google Chrome";v="110"',
-        "sec-ch-ua-mobile": "?0",
-        "sec-ch-ua-platform": '"Windows"',
-        "sec-fetch-dest": "empty",
-        "sec-fetch-mode": "cors",
-        "sec-fetch-site": "same-origin",
-        Referer: "https://datalab.labangba.com/recruit",
-        "Referrer-Policy": "strict-origin-when-cross-origin",
-      },
-      body: "{}",
-      method: "POST",
-    });
-
-    return res.json();
-  }
-
   useEffect(() => {
-    rankingApi();
-    typesApi().then((res) => setTypes(res));
+    rankingApi().then((res) => setRanking(res));
+    typeApi().then((res) => setTypes(res));
   }, []);
-
-  function typeByCid(cid) {
-    const current = types["cats"][cid];
-    if (current["pid"] !== null) {
-      return types["cats"][current.pid]["name"];
-    } else {
-      return current["name"];
-    }
-  }
 
   function handleLogout() {
     setCookie("access-token", "");
-    rankingApi();
-    typesApi().then((res) => setTypes(res));
+    rankingApi().then((res) => setRanking(res));
+    typeApi().then((res) => setTypes(res));
   }
 
   return (
@@ -131,15 +79,17 @@ export default function Home() {
             </tr>
           </thead>
           <tbody>
-            {data &&
-              data.map((row, index) => (
-                <tr key={index}>
+            {ranking &&
+              ranking.map((row, index) => (
+                <tr key={index + 1}>
                   <td>{index + 1}</td>
                   <td>
-                    <span>{row.title}</span>
-                    <span>{row.platform_id}</span>
+                    <Link href={row.link} target={"_blank"}>
+                      <span>{row.title}</span>
+                      <span>{row.platform_id}</span>
+                    </Link>
                   </td>
-                  <td>{typeByCid(row.cid)}</td>
+                  <td>{types && getTypeByCid(types, row.cid)}</td>
                   <td>{row.datetime_start}</td>
                   <td>{row.visit_cnt === null ? "로그인" : row.visit_cnt}</td>
                   <td>{row.sales_cnt === null ? "로그인" : row.sales_cnt}</td>
