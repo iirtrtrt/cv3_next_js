@@ -3,7 +3,8 @@
 ### Description
 
 This is a front end server with next js and react js.<br>
-The port is 3000.
+The port is 3000.<br>
+This has to work with a front end server, https://github.com/iirtrtrt/cv3_nodejs<br>
 
 ## Getting Started
 
@@ -14,11 +15,25 @@ node18 LTS<br>
 next13<br>
 react18<br>
 
-## Run
+## Installation
 
 ### Localhost
 
-This has to work with a front end server, https://github.com/iirtrtrt/cv3_nodejs<br>
+1. Download:
+
+```sh
+git clone https://github.com/iirtrtrt/cv3_nextjs.git
+```
+
+2. Go to the root directory:
+
+```sh
+cd ./cv3_nextjs
+```
+
+## Run
+
+### Localhost
 
 1. Install packages:
 
