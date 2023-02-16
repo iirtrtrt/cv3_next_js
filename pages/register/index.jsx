@@ -109,7 +109,7 @@ export default function Register() {
                 <input
                   type="password"
                   name="password1"
-                  placeholder="8자 이상, 숫자, 특수문자 포함"
+                  placeholder="비밀번호를 입력해주세요."
                   value={userData.password1}
                   onChange={handleChange}
                 />
@@ -123,7 +123,7 @@ export default function Register() {
                 <input
                   type="password"
                   name="password2"
-                  placeholder="8자 이상, 숫자, 특수문자 포함"
+                  placeholder="비밀번호를 한번 더 입력해주세요."
                   value={userData.password2}
                   onChange={handleChange}
                 />
